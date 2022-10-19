@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.bs.mrmf.mapper.customerMapper">
+
+    <select id="getCustomerByAny" resultType="customer" parameterType="map">
+        select * from customer
+        <where>
+            <if test="params.phone!=null and params.phone !=''">
+                and phone like '%${params.phone}'
+            </if>
+            <if test="params.name!=null and params.name !=''">
+                and `name` = '${params.name}'
+            </if>
+            <if test="params.date!=null and params.date!=''">
+                and created_date >= '${params.date}'
+            </if>
+        </where>
+    </select>
+    
+    
+</mapper>

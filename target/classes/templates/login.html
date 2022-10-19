@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html  xmlns:th=“http://www.thymeleaf.org”>
+	<head>
+		<meta charset="utf-8">
+		<title>登录页面</title>
+		<link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css"/>
+		<script src="/js/jquery.js"></script>
+		<script type="text/javascript">
+			$(function(){
+				$("#login_btu").click(function(){
+					var account = $("#exampleInputEmail1").val();
+					var password = $("#exampleInputPassword1").val();
+					var dataSet = {
+						account:account,
+						password:password
+					};
+					$.ajax({
+						url:"/action/login",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+							if(result.flag){
+								alert("登录成功")
+								window.location="/index";
+								return;
+							}else {
+								alert(result.tip );
+							}
+						}
+					});
+				})
+			})
+		</script>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<br />
+			<br />
+			<div class="row">
+				<div class="col-md-12">
+					<h3 class="text-center">
+						美容美发后台管理系统
+					</h3>
+				</div>
+			</div>
+			<br />
+			<br />
+			<div class="row">
+				<div class="col-md-4">
+				</div>
+				<div class="col-md-4" style="border:solid;">
+					<form role="form">
+						<br />
+						<br />
+						<div class="form-group">
+							<label for="exampleInputEmail1">
+								账号
+							</label>
+							<input type="email" class="form-control" id="exampleInputEmail1" />
+						</div>
+						<br />
+						<br />
+						<div class="form-group">
+							<label for="exampleInputPassword1">
+								密码
+							</label>
+							<input type="password" class="form-control" id="exampleInputPassword1" />
+						</div>
+						<br />
+						<br />
+						<button id="login_btu" type="button" class="btn btn-primary" style="margin-left: 30%;">
+							登录
+						</button>
+						<span id="tip">
+
+						</span>
+						<a style="margin-left: 5%;">忘记密码</a>
+						<br />
+						<br />
+						<br />
+						<br />
+					</form>
+				</div>
+				<div class="col-md-4">
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

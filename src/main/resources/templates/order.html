@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html  xmlns:th=“http://www.thymeleaf.org”>
+	<head>
+		<meta charset="utf-8">
+		
+		<script src="/js/jquery.js"></script>
+		<script src="/bootstrap/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" />
+		<script type="text/javascript">
+			$(function() {
+
+				$("#query_orders").click(function () {
+
+					var name = $("#item_name").val().trim();
+					var price = $("#order_price").val().trim();
+					var rootname = $("#root_name").val().trim();
+					var date = $("#date").val().trim();
+
+					if(name == "" && name == null && price == "" && price == null&& rootname == "" && rootname == null && date == "" && date == null){
+						alert("信息请填写完整");
+					}
+
+					var dataSet = {
+						name:name,
+						price:price,
+						rootname:rootname,
+						date:date
+					};
+
+					$.ajax({
+						url:"/order/getOrdersByAny",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+
+							var html = "";
+							for (var i = 0; i < result.length; i++) {
+								var tr = "<tr>";
+								var p = result[i];
+								var idHtml = "";
+								var itemHtml = "";
+								var moneyHtml = "";
+								var rootHtml = "";
+								var customerHtml = "";
+								var dateHtml = "";
+								for(var key in p){
+									switch (key) {
+										case "orderId":
+											idHtml="<td>"+p[key]+"</td>";
+											break;
+										case "item":
+											itemHtml ="<td>"+p[key]+"</td>";
+											break;
+										case "money":
+											moneyHtml ="<td>"+p[key]+"</td>";
+											break;
+										case "root":
+											rootHtml ="<td>"+p[key]+"</td>";
+											break;
+										case "customer":
+											customerHtml ="<td>"+p[key]+"</td>";
+											break;
+										case "date":
+											dateHtml ="<td>"+p[key]+"</td>";
+											break;
+									}
+									tr += idHtml + itemHtml + customerHtml + moneyHtml + rootHtml + dateHtml;
+									idHtml = "";
+									itemHtml = "";
+									customerHtml = "";
+									moneyHtml = "";
+									rootHtml = "";
+									dateHtml = "";
+								}
+								tr +="</tr>";
+								html += tr;
+							}
+							$("#orders_body").html(html);
+						}
+					})
+				})
+		
+				setTimeout(timeInner);
+		
+				function timeInner() {
+					var time = new Date().toLocaleTimeString();
+					$("#nowTime").text(time)
+					setTimeout(timeInner, 1000)
+				}
+			})
+		</script>
+		<title>订单管理</title>
+		
+	</head>
+	<body>
+		<br><br>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row">
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-md-4">
+								</div>
+								<div class="col-md-4">
+									<h3 class="text-center">
+										订单查询
+									</h3>
+								</div>
+								<div class="col-md-2">
+									<p id="nowTime"></p>
+								</div>
+								<div class="col-md-2">
+									<p>
+										<span th:text="${session.admin.name}">user</span>
+										<button type="button" onclick="location.href='index'"
+											class="btn btn-success">
+											回到首页
+										</button>
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<br>
+					<br>
+					<div class="row">
+						<div class="col-md-12">
+							<form role="form" class="form-inline">
+								<h2>查找项订单</h2>
+								项目名
+								<input id="item_name" type="text" placeholder="营业项目名"/>
+								项目价格
+								<input id="order_price" type="text" placeholder="花费价格"/>
+								创建人
+								<input id="root_name" type="text" placeholder="创建该订单的用户名"/>
+								创建日期
+								<input id="date" type="date" />
+								<button id="query_orders" type="button" class="btn btn-primary">
+									查找
+								</button>
+							</form>
+						</div>
+					</div>
+					<br>
+					<br>
+					<div class="row">
+						<div class="col-md-12">
+							<table class="table">
+								<thead>
+									<tr>
+										<th>
+											订单号
+										</th>
+										<th>
+											消费项目
+										</th>
+										<th>
+											消费人
+										</th>
+										<th>
+											消费金额
+										</th>
+										<th>
+											创建人
+										</th>									
+										<th>
+											创建时间
+										</th>
+									</tr>
+								</thead>
+								<tbody id="orders_body">
+
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
