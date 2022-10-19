@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th=“http://www.thymeleaf.org”>
+	<head>
+		<meta charset="utf-8">
+		<title>美容美发管理系统</title>
+		<link rel="stylesheet" th:href="@{/bootstrap/css/bootstrap.min.css}"/>
+		<script src="js/jquery.js"></script>
+		<script type="text/javascript">
+			$(function(){
+				getIndexData();
+				 function getIndexData(){
+					 $.ajax({
+						 url:"/order/GetOldDayOrder",
+						 type:"GET",
+						 success:function(result){
+							 $("#oldMoney").text(result.money);
+						 }
+					 })
+					 $.ajax({
+						 url:"/order/GetNewOrders",
+						 type:"GET",
+						 success:function(result){
+							 var html = "";
+							 for (var i = 0; i < result.length; i++) {
+								 var li = "<li class='list-item'>";
+								 var p = result[i];
+								 var flag = 0;
+								 for(var key in p){
+									 flag += 1;
+									 if(flag == 1 || flag == 5){
+										 continue;
+									 }
+									 var node = p[key];
+									 switch (key) {
+										 case "item":
+											 node = "项目:"+node;
+											 break;
+										 case "customer":
+											 node = "  客户:"+node
+											 break;
+										 case "money":
+											 node = "  金额:"+node
+											 break;
+										 case "root":
+											 node = "  录入:"+node
+											 break;
+									 }
+									 li+="<span>"+ node +"</span>";
+								 }
+								 li +="</li>";
+								 html += li;
+							 }
+							 $("#orderUl").html(html);
+						 }
+					 })
+				 }
+
+				setTimeout(timeInner)
+					function timeInner(){
+						var time = new Date().toLocaleTimeString();
+						$("#nowTime").text(time)
+						setTimeout(timeInner,1000)
+					}
+				$("#home").click(function(){
+					getIndexData();
+				})
+				$("#pay").click(function(){
+					window.location.href="/pay";
+					return;
+				})
+
+				$("#project").click(function(){
+					window.location.href="/project";
+					return;
+				})
+				$("#vip").click(function(){
+					window.location.href="/vip";
+					return;
+				})
+				$("#order").click(function(){
+					window.location.href="/order";
+					return;
+				})
+				$("#btn-exit").click(function(){
+					var flag = confirm("您确定退出吗")
+					if(flag == true){
+						window.location="action/exit";
+					}
+					return;
+				})
+			})
+		</script>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row">
+						<div class="col-md-12">
+							<br />
+							<div class="container-fluid">
+								<div class="row">
+									<div class="col-md-4">
+									</div>
+									<div class="col-md-4">
+										<h3 class="text-center">
+											欢迎进入系统
+										</h3>
+									</div>
+									<div class="col-md-2">
+										<p id="nowTime"></p>
+									</div>
+									<div class="col-md-2">
+										<p>
+											<span th:text="${session.admin.name}">user</span>
+											<button id="btn-exit" type="button" class="btn btn-success">
+											安全退出
+											</button>
+										</p>
+									</div>
+								</div>
+							</div>
+							<br />
+							<div class="row">
+								<div class="col-md-12">
+									<ul class="nav">
+										<li class="nav-item">
+											<a id="home" class="nav-link active" href="#">首页</a>
+										</li>
+										<li class="nav-item">
+											<a id="pay" class="nav-link" href="#">结账</a>
+										</li>
+										<li class="nav-item">
+											<a id="vip" class="nav-link" href="#">会员管理</a>
+										</li>
+										<li class="nav-item">
+											<a id="project" class="nav-link" href="#">营业项目管理</a>
+										</li>
+										<li class="nav-item">
+											<a id="order" class="nav-link" href="#">订单查询</a>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div class="carousel slide" id="carousel-291997">
+								<ol class="carousel-indicators">
+									<li data-slide-to="0" data-target="#carousel-291997" class="active">
+									</li>
+									<li data-slide-to="1" data-target="#carousel-291997">
+									</li>
+									<li data-slide-to="2" data-target="#carousel-291997">
+									</li>
+								</ol>
+								<div class="carousel-inner">
+									<div class="carousel-item active">
+										<img class="d-block w-100" alt="Carousel Bootstrap First" src="https://www.layoutit.com/img/sports-q-c-1600-500-1.jpg" />
+										<div class="carousel-caption">
+											<h4>
+												广告位招租
+											</h4>
+											<p>
+												欢迎联系，广告位空闲中，正在招租，联系电话：400-821888888
+											</p>
+										</div>
+									</div>
+								</div> 
+								<a class="carousel-control-prev" href="#carousel-291997" data-slide="prev"><span class="carousel-control-prev-icon"></span> <span class="sr-only">上一页</span></a> 
+								<a class="carousel-control-next" href="#carousel-291997" data-slide="next"><span class="carousel-control-next-icon"></span> <span class="sr-only">下一页</span></a>
+							</div>
+							<br />
+							<div class="row">
+								<div class="col-md-12">
+									<div class="row">
+										<div class="col-md-12">
+											<div class="row">
+												<div class="col-md-6">
+													<h2 class="fw-bold">今日最新订单</h2>
+													<ul id="orderUl">
+
+													</ul>
+												</div>
+												<div class="col-md-6" style="border: solid;" >
+													<h2 class="fw-bold">
+														昨日营收
+													</h2>
+													<h4 id="oldMoney">
+
+													</h4>
+												</div>
+											</div>
+										</div>
+									</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

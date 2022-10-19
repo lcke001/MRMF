@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns:th=“http://www.thymeleaf.org”>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css"/>
+		<script src="/js/jquery.js"></script>
+		<script src="/bootstrap/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+
+			function itemStateChange(id) {
+				var dataSet = {
+					id:id
+				};
+				$.ajax({
+					url:"/item/SetItemState",
+					type:"POST",
+					contentType:"application/json",
+					data:JSON.stringify(dataSet),
+					success:function(result){
+						if(result.flag){
+							alert("修改成功");
+						}else {
+							alert("修改失败")
+						}
+					}
+				});
+			}
+
+			$(function() {
+				$("#addItem").click(function () {
+					var name = $("#add_item_name").val().trim();
+					var price = $("#add_item_price").val().trim();
+					if ((name == "" || name == null) || (price == "" || price == null)){
+						alert("创建信息不完整");
+						return;
+					}
+					var dataSet = {
+						name:name,
+						price:price
+					};
+					$.ajax({
+						url:"/item/addItem",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+							if(result.flag){
+								alert("添加成功")
+							}else {
+								alert("添加失败");
+							}
+							$("#addvip").modal("hide")
+						}
+					});
+				})
+
+				$("#query_item").click(function () {
+					var txt = $('#query_form').find('input');
+					var price;
+					var name;
+					var date;
+					for (let i = 0; i < txt.length; i++) {
+						switch (i) {
+							case 0:
+								name = txt.eq(i).val().trim();
+								break;
+							case 1:
+								price = txt.eq(i).val().trim();
+								break;
+							case 2:
+								date = txt.eq(i).val().trim();
+								break;
+						}
+					}
+					if ((name == "" || name == null)&&(price == "" || price == null)&&(date == "" || date == null)){
+						alert("搜索信息至少填写一项");
+						return;
+					}
+					var dataSet = {
+						price:price,
+						name:name,
+						date:date
+					};
+					$.ajax({
+						url:"/item/getItemByAny",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+							var html = "";
+							for(var i = 0; i < result.length; i++) {
+								var tr = "<tr>";
+								var td = "";
+								var nameHtml = "";
+								var priceHtml = "";
+								var rootHtml = "";
+								var stateHtml = "";
+								var createdateHtml = "";
+								var p = result[i];
+								for(var key in p){
+									switch(key){
+										case "name":
+											nameHtml="<td>"+p[key]+"</td>";
+											break;
+										case "price":
+											priceHtml="<td>"+p[key]+"</td>";
+											break;
+										case "root":
+											rootHtml="<td>"+p[key]+"</td>";
+											break;
+										case "createdate":
+											createdateHtml="<td>"+p[key]+"</td>";
+											break;
+										case "state":
+											if(p[key] == "1"){
+												stateHtml="<td>上架中</td>";
+											}else {
+												stateHtml="<td>下架中</td>";
+											}
+											break;
+									}
+								}
+								td += nameHtml+priceHtml+rootHtml+createdateHtml+stateHtml;
+								nameHtml = "";
+								priceHtml = "";
+								rootHtml = "";
+								stateHtml = "";
+								createdateHtml = "";
+								tr+=td;
+								tr+="<td>\n" +
+										"<button onclick='itemStateChange("+p['id']+")' class='btn-danger'>\n" +
+										"上下架\n" +
+										"</button>\n" +
+										"</td></tr>";
+								html+=tr;
+							}
+							$("#item_list").html(html)
+						}
+					});
+				})
+
+				setTimeout(timeInner);
+		
+				function timeInner() {
+					var time = new Date().toLocaleTimeString();
+					$("#nowTime").text(time)
+					setTimeout(timeInner, 1000)
+				}
+			})
+
+		</script>
+		<title>营业项目管理</title>
+	</head>
+	<body>
+		<br><br>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row">
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-md-4">
+								</div>
+								<div class="col-md-4">
+									<h3 class="text-center">
+										营业项管理系统
+									</h3>
+								</div>
+								<div class="col-md-2">
+									<p id="nowTime"></p>
+								</div>
+								<div class="col-md-2">
+									<p>
+										<span th:text="${session.admin.name}">user</span>
+										<button type="button" onclick="location.href='index'"
+											class="btn btn-success">
+											回到首页
+										</button>
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addvip">
+							 添加营业项目
+							</button>
+							
+							<div class="modal fade" id="addvip" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+							  <div class="modal-dialog">
+							    <div class="modal-content">
+							      <div class="modal-header">
+							        <h5 class="modal-title" id="exampleModalLabel">添加项目</h5>
+							        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							      </div>
+							      <div class="modal-body">
+									  <form role="form" class="form-inline">
+									  	<p>添加营业项目</p>
+									  	项目名：
+									  	<input id="add_item_name" type="text" /><br>
+									  	项目单价
+									  	<input id="add_item_price" type="text" /><br>
+									  </form>
+							      </div>
+							      <div class="modal-footer">
+							        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+							        <button id="addItem" type="button" class="btn btn-primary">创建</button>
+							      </div>
+							    </div>
+							  </div>
+							</div>
+						</div>
+					</div>
+					<br>
+					<br>
+					<div class="row">
+						<div class="col-md-12">
+							<form id="query_form" role="form" class="form-inline">
+								<h2>查找项目</h2>
+								项目名
+								<input id="name" type="text"/>
+								项目价格
+								<input id="price" type="text"/>
+								创建日期
+								<input id="date" type="date" />
+								<button id="query_item" type="button" class="btn btn-primary">
+									查找
+								</button>
+							</form>
+						</div>
+					</div>
+					<br>
+					<br>
+					<div class="row">
+						<div class="col-md-12">
+							<table class="table">
+								<thead>
+									<tr>
+										<th>
+											项目名
+										</th>
+										<th>
+											项目单价
+										</th>
+										<th>
+											项目创建人
+										</th>
+										<th>
+											创建时间
+										</th>
+										<th>
+											状态
+										</th>
+										<th>
+											操作
+										</th>
+									</tr>
+								</thead>
+								<tbody id="item_list">
+
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

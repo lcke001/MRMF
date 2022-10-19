@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html  xmlns:th=“http://www.thymeleaf.org”>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" />
+		<script src="/js/jquery.js"></script>
+		<script src="/bootstrap/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+			$(function() {
+
+				$("#pay_req").click(function () {
+					var options=$("#item_select option:selected");
+					var ptext = options.val();
+					var index = ptext.indexOf("and");
+					var itemid = ptext.substring(index+3);
+					var cusId = $("#modal_cus_id").text();
+
+					var dataSet = {
+						itemId:itemid,
+						customerId:cusId
+					};
+					$.ajax({
+						url:"/order/AddOrders",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+							if(result.flag){
+								alert("保存成功")
+								window.location="/index";
+								return;
+							}else {
+								alert("保存失败");
+							}
+						}
+					});
+					// $("#paymodal").modal("hide")
+
+				})
+
+				$("#queryvip").click(function () {
+					var phone = $("#phone_num").val().trim();
+					if (phone == "" || phone == null){
+						alert("输入不能为空");
+						return;
+					}
+					var dataSet = {
+						phone:phone
+					};
+					$.ajax({
+						url:"/customer/GetCustomer",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+							var html = "";
+
+							for(var i = 0; i < result.length; i++) {
+								var tr = "<tr>";
+								var td = "";
+								td += "<td>"+(i+1)+"</td>"
+								var p = result[i];
+								for(var key in p){
+									td+="<p id='cus_id' style='display: none'>"+p['id']+"</p>"
+									switch (key) {
+										case "name":
+											td+="<td> "+p[key]+" </td>"
+											break;
+										case "level":
+											switch (p[key]){
+												case "1":
+													td+="<td>"+"普通会员"+"</td><td>";
+													break;
+												case "2":
+													td+="<td>"+"白银会员"+"</td><td>";
+													break;
+												case "3":
+													td+="<td>"+"黄金会员"+"</td><td>";
+													break;
+												case "4":
+													td+="<td>"+"钻石会员"+"</td><td>";
+													break;
+												case "5":
+													td+="<td>"+"黑金会员"+"</td><td>";
+													break;
+											}
+											break;
+									}
+									td+="<button id='btn-pay' onclick='queryOneVip("+p["id"]+""+")' class='btn btn-success' data-bs-toggle='modal' data-bs-target='#paymodal'> + 结账</button></td><hr>";
+								}
+								tr+=td+"</tr>";
+								html+=tr;
+							}
+							$("#customer_list").html(html);
+						}
+					});
+				})
+
+
+
+				$("#warningDiv").css("display", "none")
+				$(".pay-page").css("display", "none")
+				setTimeout(timeInner);
+
+				function timeInner() {
+					var time = new Date().toLocaleTimeString();
+					$("#nowTime").text(time)
+					setTimeout(timeInner, 1000)
+				}
+
+			})
+
+			function payPrice() {
+				var options=$("#item_select option:selected")
+				var ptext = options.val();
+				var index = ptext.indexOf("and");
+				var price = ptext.substring(0,index);
+				$("#item_price").text(price)
+			}
+
+			function queryOneVip(id){
+				var html = "";
+				var dataSet = {
+					id:id
+				};
+				$.ajax({
+					url:"/customer/GetCustomerAllInfo",
+					type:"POST",
+					contentType:"application/json",
+					data:JSON.stringify(dataSet),
+					success:function(result){
+
+						for(var key in result){
+							var td = "<p id='modal_cus_id' style='display: none;'>"+id+"</p>";
+							switch (key){
+								case "name":
+									td+="<tr><td>姓名</td><td>"+result[key]+"</td></tr>"
+									break;
+								case "level":
+									td+="<tr class=\"table-danger\"><td>等级</td><td>"
+									switch (result[key]){
+										case "1":
+											td+="普通会员"+"</td></tr>";
+											break;
+										case "2":
+											td+="白银会员"+"</td></tr>";
+											break;
+										case "3":
+											td+="黄金会员"+"</td></tr>";
+											break;
+										case "4":
+											td+="钻石会员"+"</td></tr>";
+											break;
+										case "5":
+											td+="黑金会员"+"</td></tr>";
+											break;
+									}
+									break;
+								case "money":
+									td+="<tr class='table-active'><td>余额</td><td>"+result[key]+"</td></tr>"
+									break;
+							}
+							html+=td;
+							$("#payPage").html(html);
+						}
+						$.ajax({
+							url:"/item/GetAllItem",
+							type:"POST",
+							success:function(result){
+								var shtml = "";
+								shtml +="<tr class='table-success'><td><select id='item_select' onchange='payPrice()'>";
+								var allOp = "";
+								for (var i = 0; i < result.length; i++) {
+									var p = result[i];
+									var op = ""
+									for(var key in p){
+										switch (key) {
+											case "name":
+												op+="<option value='"+p["price"]+"and"+p["id"]+"'>" + p[key] +"</option>"
+												break;
+										}
+									}
+									allOp += op;
+								}
+								shtml += allOp;
+								shtml+="</select></td><td>本次消费<span id='item_price'>20</span>元</td></tr>";
+								var oldhtml = $("#payPage").html();
+								$("#payPage").html(oldhtml+shtml);
+							}
+						})
+
+
+					}
+				})
+			}
+		</script>
+		<style type="text/css">
+			img {
+				width: 80%;
+				height: 80%;
+			}
+
+			.warning-div {
+				position: absolute;
+			}
+
+			.pay-page {
+				background-color: aliceblue;
+				position: absolute;
+				width: 35%;
+				height: 70%;
+				margin-left: 33%;
+			}
+		</style>
+		<title>结账页面</title>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<br />
+					<br />
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col-md-4">
+							</div>
+							<div class="col-md-4">
+								<h3 class="text-center">
+									欢迎进入结账系统
+								</h3>
+							</div>
+							<div class="col-md-2">
+								<p id="nowTime"></p>
+							</div>
+							<div class="col-md-2">
+								<p>
+									<span th:text="${session.admin.name}">user</span>
+									<button type="button" onclick="location.href='index'"
+										class="btn btn-success">
+										回到首页
+									</button>
+								</p>
+							</div>
+						</div>
+					</div>
+					<br />
+					<br />
+					<div class="row">
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-md-4">
+									<img style="float: left;" alt="Bootstrap Image Preview" src="/img/z2.jpg" />
+								</div>
+								<div class="modal fade" id="paymodal" tabindex="-1" aria-labelledby="exampleModalLabel"
+									aria-hidden="true">
+									<div class="modal-dialog">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title" id="exampleModalLabel">结账</h5>
+												<button type="button" class="btn-close" data-bs-dismiss="modal"
+													aria-label="Close"></button>
+											</div>
+											<div class="modal-body">
+												<div class="container-fluid">
+													<div class="row">
+														<div class="col-md-12">
+															<table class="table">
+																<tbody id="payPage">
+																</tbody>
+															</table>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="modal-footer">
+												<button type="button" class="btn btn-secondary"
+													data-bs-dismiss="modal">取消</button>
+												<button id="pay_req" type="button" class="btn btn-primary">结账</button>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4">
+									<div class="row">
+										<div class="col-md-9">
+											<input id="phone_num" type="text" placeholder="会员手机号后四位" class="form-control" />
+										</div>
+										<div class="col-md-3">
+											<button id="queryvip" type="button" class="btn btn-success">
+												搜索
+											</button>
+										</div>
+									</div>
+
+									<div class="container-fluid">
+										<div class="row">
+											<div class="col-md-12">
+												<table class="table">
+													<thead>
+														<tr>
+															<th>
+																#
+															</th>
+															<th>
+																会员名
+															</th>
+															<th>
+																会员等级
+															</th>
+															<th>
+																操作
+															</th>
+														</tr>
+													</thead>
+													<tbody id="customer_list">
+
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-4">
+									<img style="float: right;" alt="Bootstrap Image Preview" src="/img/z1.jpg" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</body>
+</html>

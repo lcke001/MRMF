@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html  xmlns:th=“http://www.thymeleaf.org”>
+	<head>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" />
+		<script src="/js/jquery.js"></script>
+		<script src="/bootstrap/js/bootstrap.min.js"></script>
+		<script type="text/javascript">
+			$(function() {
+				$("#query_vip").click(function () {
+					var txt = $('#query_form').find('input');
+					var phone;
+					var name;
+					var date;
+					for (let i = 0; i < txt.length; i++) {
+						switch (i) {
+							case 0:
+								phone = txt.eq(i).val().trim();
+								break;
+							case 1:
+								name = txt.eq(i).val().trim();
+								break;
+							case 2:
+								date = txt.eq(i).val().trim();
+								break;
+						}
+					}
+					if ((name == "" || name == null)&&(phone == "" || phone == null)&&(date == "" || date == null)){
+						alert("搜索信息至少填写一项");
+						return;
+					}
+					var dataSet = {
+						phone:phone,
+						name:name,
+						date:date
+					};
+					$.ajax({
+						url:"/customer/getCustomerByAny",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+							var html = "";
+							for(var i = 0; i < result.length; i++) {
+								var tr = "<tr>";
+								var td = "";
+								var p = result[i];
+								var flag = 0;
+								for(var key in p){
+									switch(key){
+										case "name":
+											flag++;
+											td+="<td>"+flag+"</td>";
+											td+="<td>"+p[key]+"</td>"
+											break;
+										case "level":
+											switch (p[key]){
+												case "1":
+													td+="<td>"+"普通会员"+"</td><td>";
+													break;
+												case "2":
+													td+="<td>"+"白银会员"+"</td><td>";
+													break;
+												case "3":
+													td+="<td>"+"黄金会员"+"</td><td>";
+													break;
+												case "4":
+													td+="<td>"+"钻石会员"+"</td><td>";
+													break;
+												case "5":
+													td+="<td>"+"黑金会员"+"</td><td>";
+													break;
+											}
+											break;
+									}
+								}
+								tr+=td;
+								tr+="<button onclick='vipDeatil("+p['id']+")' class='btn btn-success' data-bs-toggle=\"modal\" data-bs-target=\"#detail\">\n" +
+										"详情\n" +
+										"</button>\n" +
+										"<button onclick='addMoney("+p['id']+")' class='btn btn-warning' data-bs-toggle=\"modal\" data-bs-target=\"#addmoney\">\n" +
+										"充值\n" +
+										"</button>\n" +
+										"<button onclick='deleteVip("+p['id']+")' class='btn btn-danger'>" +
+										"退卡\n" +
+										"</button>\n" +
+										"</td>\n" +
+										"</tr>"
+								html+=tr;
+							}
+							$("#vip_list").html(html)
+						}
+					});
+				})
+
+				$("#save_vip").click(function () {
+					var name = $("#name").val().trim();
+					var phone = $("#phone").val().trim();
+					var address = $("#address").val().trim();
+					var birthday = $("#birthday").val().trim();
+					var email = $("#email").val().trim();
+					var money = $("#money").val().trim();
+					var gender = $('input:radio:checked').val().trim();
+
+					if(name == "" || name == null ||phone == "" || phone == null ||address == "" || address == null ||birthday == "" || birthday == null ||email == "" || email == null ||money == "" || money == null ||gender == "" || gender == null){
+						alert("信息请填写完整");
+						$("#addvip").modal("hide");
+					}
+
+					var dataSet = {
+						name:name,
+						phone:phone,
+						address:address,
+						birthday:birthday,
+						email:email,
+						money:money,
+						gender:gender
+					};
+					$.ajax({
+						url:"/customer/addVip",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+							if(result.flag){
+								alert("保存成功")
+								window.location="/index";
+								return;
+							}else {
+								alert("保存失败");
+							}
+						}
+					});
+					$("#addvip").modal("hide")
+
+				})
+
+				$("#add_Money_Btn").click(function () {
+					var recharge = $("#recharge_input").val();
+					var id = $("#vip_id_in_AddMoney").text();
+					var dataSet = {
+						id:id,
+						recharge:recharge
+					};
+					$.ajax({
+						url:"/customer/addMoney",
+						type:"POST",
+						contentType:"application/json",
+						data:JSON.stringify(dataSet),
+						success:function(result){
+							if(result.flag){
+								alert("充值成功")
+							}else {
+								alert("充值失败");
+							}
+							$("#addmoney").modal("hide")
+						}
+					});
+				})
+
+				setTimeout(timeInner);
+
+				function timeInner() {
+					var time = new Date().toLocaleTimeString();
+					$("#nowTime").text(time)
+					setTimeout(timeInner, 1000)
+				}
+			})
+			function vipDeatil(id) {
+				var dataSet = {
+					id:id
+				};
+				$.ajax({
+					url:"/customer/getOneVip",
+					type:"POST",
+					contentType:"application/json",
+					data:JSON.stringify(dataSet),
+					success:function(result){
+						var vip = result;
+						for(var key in vip){
+							switch (key) {
+								case "level":
+									switch (vip[key]){
+										case "1":
+											$("#detail_level").text("普通会员");
+											break;
+										case "2":
+											$("#detail_level").text("白银会员");
+											break;
+										case "3":
+											$("#detail_level").text("黄金会员");
+											break;
+										case "4":
+											$("#detail_level").text("钻石会员");
+											break;
+										case "5":
+											$("#detail_level").text("黑金会员");
+											break;
+									}
+									break;
+								case "name":
+									$("#detail_name").text(vip[key]);
+									break;
+								case "email":
+									$("#detail_email").text(vip[key]);
+									break;
+								case "gender":
+									$("#detail_gender").text(vip[key]);
+									break;
+								case "phone":
+									$("#detail_phone").text(vip[key]);
+									break;
+								case "address":
+									$("#detail_address").text(vip[key]);
+									break;
+								case "money":
+									$("#detail_money").text(vip[key]);
+									break;
+								case "expenditure":
+									$("#detail_expenditure").text(vip[key]);
+									break;
+								case "birthday":
+									$("#detail_birthday").text(vip[key]);
+									break;
+								case "root":
+									$("#detail_root").text(vip[key]);
+									break;
+								case "state":
+									if(vip[key] == "1"){
+										$("#detail_state").text("正常");
+									}else {
+										$("#detail_state").text("停用");
+									}
+									break;
+								case "createdDate":
+									$("#detail_createdDate").text(vip[key]);
+									break;
+								case "log":
+									$("#detail_log").text(vip[key]);
+									break;
+							}
+						}
+					}
+				});
+			}
+			function addMoney(id) {
+				addMoneyData(id);
+			}
+			function deleteVip(id) {
+				if (!confirm("是否删除")) {
+					return;
+				}
+				var dataSet = {
+					id:id
+				};
+				$.ajax({
+					url:"/customer/delVip",
+					type:"POST",
+					contentType:"application/json",
+					data:JSON.stringify(dataSet),
+					success:function(result){
+						if(result.flag){
+							alert("删除成功")
+						}else {
+							alert("删除失败")
+						}
+					}
+				});
+			}
+			function addMoneyData(id) {
+				var dataSet = {
+					id:id
+				};
+				$.ajax({
+					url:"/customer/getOneVip",
+					type:"POST",
+					contentType:"application/json",
+					data:JSON.stringify(dataSet),
+					success:function(result){
+						var vip = result;
+						for(var key in vip) {
+							switch (key) {
+								case "id":
+									$("#vip_id_in_AddMoney").text(vip[key]);
+									break;
+								case "level":
+									switch (vip[key]) {
+										case "1":
+											$("#add_money_level").text("普通会员");
+											break;
+										case "2":
+											$("#add_money_level").text("白银会员");
+											break;
+										case "3":
+											$("#add_money_level").text("黄金会员");
+											break;
+										case "4":
+											$("#add_money_level").text("钻石会员");
+											break;
+										case "5":
+											$("#add_money_level").text("黑金会员");
+											break;
+									}
+									break;
+								case "name":
+									$("#add_money_name").text(vip[key]);
+									break;
+								case "money":
+									$("#add_money_money").text(vip[key]);
+									break;
+							}
+						}
+					}
+				});
+			}
+		</script>
+		<title>会员管理</title>
+	</head>
+	<body>
+		<br />
+		<br />
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="row">
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-md-4">
+								</div>
+								<div class="col-md-4">
+									<h3 class="text-center">
+										欢迎进入会员管理系统
+									</h3>
+								</div>
+								<div class="col-md-2">
+									<p id="nowTime"></p>
+								</div>
+								<div class="col-md-2">
+									<p>
+										<span th:text="${session.admin.name}">user</span>
+										<button type="button" onclick="location.href='index'"
+											class="btn btn-success">
+											回到首页
+										</button>
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<form id="query_form" role="form" class="form-inline">
+								<h3>查找会员</h3>
+								手机号
+								<input type="text" name="phone" placeholder="手机号后四位" />
+								姓名
+								<input type="text" name="name" placeholder="会员真实姓名" />
+								创建日期
+								<input name="date" type="date" />
+								<button type="button" id="query_vip" class="btn btn-primary">
+									查找
+								</button>
+							</form>
+						</div>
+					</div>
+					<br />
+					<br />
+					<!-- Button trigger modal -->
+					<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addvip">
+					 创建会员
+					</button>
+					
+					<!-- Modal -->
+					<div class="modal fade" id="addvip" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+					  <div class="modal-dialog">
+					    <div class="modal-content">
+					      <div class="modal-header">
+					        <h5 class="modal-title" id="exampleModalLabel">创建会员</h5>
+					        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					      </div>
+					      <div class="modal-body">
+							  <form role="form" class="form-inline">
+							  	<p>创建会员</p>
+							  	会员真实姓名：
+							  	<input id="name" type="text" /><br>
+							  	会员性别：
+							  	男<input name="gender" type="radio" value="男" />
+							  	女<input name="gender" type="radio" value="女" /><br>
+							  	会员联系方式
+							  	<input id="phone" type="text" /><br>
+							  	会员住址
+							  	<input id="address" type="text" /><br>
+							  	会员生日
+							  	<input id="birthday" type="date" /><br>
+								会员邮箱
+								<input id="email" type="text" /><br>
+							  	会员充值金额
+							  	<input id="money" type="text" /><br>
+							  </form>
+					      </div>
+					      <div class="modal-footer">
+					        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+					        <button id="save_vip" type="button" class="btn btn-primary">保存并关闭</button>
+					      </div>
+					    </div>
+					  </div>
+					</div>
+					<br><br><br>
+					<div class="row">
+						<div class="col-md-12">
+							<h3>
+								搜索结果
+							</h3>
+							<table class="table">
+								<thead>
+									<tr>
+										<th>
+											#
+										</th>
+										<th>
+											会员名
+										</th>
+										<th>
+											会员等级
+										</th>
+										<th>
+											操作
+										</th>
+									</tr>
+								</thead>
+								<tbody id="vip_list">
+
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<img alt="Bootstrap Image Preview" src="/img/z4.jpg" style="width: 100%; height: 66%;" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="detail" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		  <div class="modal-dialog">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <h5 class="modal-title" id="exampleModalLabel">会员详情</h5>
+		        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		      </div>
+		      <div class="modal-body">
+				  <div class="container-fluid">
+				  	<div class="row">
+				  		<div class="col-md-12">
+				  			<table class="table">
+				  				<thead>
+				  					<tr>
+				  						<th>信息</th><th>详情</th>
+				  					</tr>
+				  				</thead>
+				  				<tbody>
+				  					<tr>
+				  						<td>姓名</td><td id="detail_name">凯莉</td>
+				  					</tr>
+				  					<tr class="table-active">
+				  						<td>性别</td><td id="detail_gender">女</td>
+				  					</tr>
+				  					<tr class="table-success">
+				  						<td>联系方式</td><td id="detail_phone">13345625252</td>
+				  					</tr>
+				  					<tr class="table-warning">
+				  						<td>住址</td><td id="detail_address">纽约第一人民医院家属院7号楼1203</td>
+				  					</tr>
+				  					<tr class="table-danger">
+				  						<td>等级</td><td id="detail_level">黑金会员</td>
+				  					</tr>
+									<tr>
+										<td>余额</td><td id="detail_money">1880</td>
+									</tr>
+									<tr class="table-active">
+										<td>总消费</td><td id="detail_expenditure">2500</td>
+									</tr>
+									<tr class="table-success">
+										<td>生日</td><td id="detail_birthday">2001-03-06</td>
+									</tr>
+									<tr class="table-warning">
+										<td>上次消费时间</td><td id="detail_log">2022-10-07</td>
+									</tr>
+									<tr>
+										<td>邮箱</td><td id="detail_email">2022-10-07</td>
+									</tr>
+									<tr class="table-danger">
+										<td>注册日期</td><td id="detail_createdDate">2021-12-22</td>
+									</tr>
+									<tr>
+										<td>创建人</td><td id="detail_root">胶泥</td>
+									</tr>
+									<tr class="table-active">
+										<td>账户状态</td><td id="detail_state">正常</td>
+									</tr>
+				  				</tbody>
+				  			</table>
+				  		</div>
+				  	</div>
+				  </div>
+		      </div>
+		      <div class="modal-footer">
+		        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+		<div class="modal fade" id="addmoney" tabindex="-1" aria-labelledby="exampleModalLabel"
+			aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exampleModalLabel">充值</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="container-fluid">
+							<div class="row">
+								<div class="col-md-12">
+									<table class="table">
+										<tbody>
+											<p id="vip_id_in_AddMoney" style="display: none"></p>
+											<tr>
+												<td>姓名</td>
+												<td id="add_money_name">凯莉</td>
+											</tr>
+											<tr class="table-danger">
+												<td>等级</td>
+												<td id="add_money_level">黑金会员</td>
+											</tr>
+											<tr class="table-active">
+												<td>余额</td>
+												<td id="add_money_money">1880</td>
+											</tr>
+											<tr class="table-success">
+												<td>
+													充值金额
+												</td>
+												<td><input id="recharge_input" type="text" class="input-group-text"/></td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">取消</button>
+						<button id="add_Money_Btn" type="button" class="btn btn-primary">充值</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
